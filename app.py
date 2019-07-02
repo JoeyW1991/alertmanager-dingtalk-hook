@@ -12,7 +12,8 @@ from redis import Redis
 
 
 app = Flask(__name__)
-redis = Redis(host=config.redis_host, port=config.redis_port)
+redis = Redis(host=config.redis_host, port=config.redis_port,
+              password=config.redis_pssword)
 
 
 def send_data(data):

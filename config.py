@@ -8,6 +8,8 @@ redis_port = os.getenv('REDIS_SERVICE_PORT')
 if not redis_port:
     redis_port = 6379
 
+redis_pssword = os.getenv('REDIS_SERVICE_PASSWORD')
+
 send_limit = os.getenv('SEND_LIMIT')
 if send_limit:
     send_limit = int(send_limit)
