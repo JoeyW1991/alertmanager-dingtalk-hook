@@ -1,10 +1,10 @@
 import os
 
-redis_host = os.getenv('REDIS_HOST')
+redis_host = os.getenv('REDIS_SERVICE_HOST')
 if not redis_host:
     redis_host = 'localhost'
 
-redis_port = os.getenv('REDIS_HOST')
+redis_port = os.getenv('REDIS_SERVICE_PORT')
 if not redis_port:
     redis_port = 6379
 
