@@ -1,13 +1,10 @@
-FROM python:3.6.4
+FROM python:3.6.4-slim
 
-# set working directory
-WORKDIR /src
+RUN groupadd user && useradd --create-home --home-dir /home/user -g user user
+WORKDIR /home/user
+COPY requirements.txt /requirements.txt
+RUN pip install --no-cache-dir -r /requirements.txt
+ADD . .
 
-# add app
-ADD . /src
-
-# install requirements
-RUN pip install -r requirements.txt
-
-# run server
+USER user
 CMD python app.py

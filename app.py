@@ -36,6 +36,7 @@ celery = make_celery(app)
 def send_sync_alert(data):
     url = 'https://oapi.dingtalk.com/robot/send?access_token=%s' % app.config['DINGTALK_TOKEN']
     headers = {'Content-Type': 'application/json;charset=utf-8'}
+    print(data)
     req = requests.post(url, json.dumps(data), headers=headers)
     req = json.loads(req.content)
     if req[u'errcode'] > 0:

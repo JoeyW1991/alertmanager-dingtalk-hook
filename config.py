@@ -17,7 +17,7 @@ redis_pssword = os.getenv('REDIS_SERVICE_PASSWORD')
 
 RATE_LIMIT = os.getenv('RATE_LIMIT')
 if not RATE_LIMIT:
-    RATE_LIMIT = '2/m'
+    RATE_LIMIT = '20/m'
 
 DINGTALK_TOKEN = os.getenv('DINGTALK_TOKEN')
 
