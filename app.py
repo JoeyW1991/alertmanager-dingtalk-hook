@@ -46,7 +46,6 @@ def send_sync_alert(data):
 @app.route('/', methods=['POST', 'GET'])
 def send():
     if request.method == 'POST':
-        print(config)
         post_data_str = request.get_data()
         post_data_json = bytes2json(post_data_str)
         post_data = json2markdown(post_data_json)
@@ -95,8 +94,4 @@ def json2markdown(data):
 
 
 if __name__ == '__main__':
-    if not config.dingtalk_token:
-        print('you must set DINGTALK_TOKEN env')
-        print(config.dingtalk_token)
-        exit()
     app.run(host='0.0.0.0', port=5000)
