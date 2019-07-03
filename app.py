@@ -1,49 +1,56 @@
 # -*- coding: UTF-8 -*-
 
+from __future__ import absolute_import
+
+import os
 import json
 import requests
 
 import config
-
-from time import sleep
 from flask import Flask
 from flask import request
-from redis import Redis
+from celery import Celery
 
 
 app = Flask(__name__)
-redis = Redis(host=config.redis_host, port=config.redis_port,
-              password=config.redis_pssword)
+app.config.from_object(config)
 
 
-def send_data(data):
-    for i in range(60):
-        index_value = redis.get(config.redis_key_index_name)
-        if not index_value:
-            index = 0
-        else:
-            index = int(index_value)
-        index = (index + 1) % config.send_limit
-        key_name = config.redis_key_pre + str(index)
-        last_send = redis.get(key_name)
-        if not last_send:
-            redis.set(config.redis_key_index_name, index, 120)
-            redis.set(key_name, '1', 60)
-            send_alert(data)
-            return "send sess"
-        else:
-            print(key_name, last_send, i)
-        sleep(5)
-    print('time out')
+def make_celery(app):
+    celery = Celery(app.import_name, broker=app.config['CELERY_BROKER_URL'])
+    celery.conf.update(app.config)
+    TaskBase = celery.Task
+    class ContextTask(TaskBase):
+        abstract = True
+        def __call__(self, *args, **kwargs):
+            with app.app_context():
+                return TaskBase.__call__(self, *args, **kwargs)
+    celery.Task = ContextTask
+    return celery
+
+
+celery = make_celery(app)
+
+
+@celery.task(name='send_alert_dingtalk', rate_limit=app.config['RATE_LIMIT'])
+def send_sync_alert(data):
+    url = 'https://oapi.dingtalk.com/robot/send?access_token=%s' % app.config['DINGTALK_TOKEN']
+    headers = {'Content-Type': 'application/json;charset=utf-8'}
+    req = requests.post(url, json.dumps(data), headers=headers)
+    req = json.loads(req.content)
+    if req[u'errcode'] > 0:
+        print(url)
+        print(req)
 
 
 @app.route('/', methods=['POST', 'GET'])
 def send():
     if request.method == 'POST':
+        print(config)
         post_data_str = request.get_data()
         post_data_json = bytes2json(post_data_str)
         post_data = json2markdown(post_data_json)
-        send_data(post_data)
+        send_sync_alert.delay(post_data)
         return 'success'
     else:
         return 'weclome to use prometheus alertmanager dingtalk webhook server!'
@@ -87,17 +94,9 @@ def json2markdown(data):
     return postdata
 
 
-def send_alert(data):
-    url = 'https://oapi.dingtalk.com/robot/send?access_token=%s' % config.dingtalk_token
-    headers = {'Content-Type': 'application/json;charset=utf-8'}
-    req = requests.post(url, json.dumps(data), headers=headers)
-    req = json.loads(req.content)
-    if req[u'errcode'] > 0:
-        print(req)
-
-
 if __name__ == '__main__':
     if not config.dingtalk_token:
         print('you must set DINGTALK_TOKEN env')
+        print(config.dingtalk_token)
         exit()
     app.run(host='0.0.0.0', port=5000)

@@ -8,14 +8,18 @@ redis_port = os.getenv('REDIS_SERVICE_PORT')
 if not redis_port:
     redis_port = 6379
 
+redis_db = os.getenv('REDIS_DB')
+if not redis_db:
+    redis_db = 0
+
+
 redis_pssword = os.getenv('REDIS_SERVICE_PASSWORD')
 
-send_limit = os.getenv('SEND_LIMIT')
-if send_limit:
-    send_limit = int(send_limit)
-else:
-    send_limit = 20
+RATE_LIMIT = os.getenv('RATE_LIMIT')
+if not RATE_LIMIT:
+    RATE_LIMIT = '2/m'
 
-dingtalk_token = os.getenv('DINGTALK_TOKEN')
-redis_key_pre = 'alert-dingtalk-' + dingtalk_token[-9: -1] + '-'
-redis_key_index_name = redis_key_pre + 'index'
+DINGTALK_TOKEN = os.getenv('DINGTALK_TOKEN')
+
+CELERY_BROKER_URL = 'redis://{}:{}/{}'.format(redis_host, redis_port, redis_db)
+CELERY_RESULT_BACKEND = 'redis://{}:{}/{}'.format(redis_host, redis_port, redis_db)
